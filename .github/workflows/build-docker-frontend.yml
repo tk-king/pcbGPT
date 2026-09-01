@@ -44,7 +44,7 @@ jobs:
       - name: Tag and push to GHCR
         run: |
           set -euo pipefail
-          REPO="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
           echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
 
           VERSION="${{ github.ref_name }}"
@@ -57,6 +57,6 @@ jobs:
           fi
 
           for tag in "${tags[@]}"; do
-            docker tag pcbgpt-frontend "${{ env.REGISTRY }}/$REPO/frontend:$tag"
-            docker push "${{ env.REGISTRY }}/$REPO/frontend:$tag"
+            docker tag pcbgpt-frontend "${{ env.REGISTRY }}/$OWNER/pcbgpt-frontend:$tag"
+            docker push "${{ env.REGISTRY }}/$OWNER/pcbgpt-frontend:$tag"
           done
