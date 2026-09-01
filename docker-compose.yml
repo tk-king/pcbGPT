@@ -1,0 +1,30 @@
+name: pcbgpt
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      KICAD_CLI: kicad-cli
+      KICAD_SYMBOL_PATH: /usr/share/kicad/symbols
+      KICAD_FOOTPRINT_PATH: /usr/share/kicad/footprints
+    ports:
+      - "8000:8000"
+    volumes:
+      - pcbgpt-runtime:/app/runtime
+      - ./Datasets:/app/Datasets
+      - ./datasheets:/app/datasheets
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      VITE_BACKEND_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pcbgpt-runtime:

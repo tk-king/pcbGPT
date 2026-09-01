@@ -1,0 +1,60 @@
+name: Build Docker Image (backend)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker compose build backend
+
+      - name: Start backend
+        run: docker compose up -d backend
+
+      - name: Smoke test (backend /docs)
+        run: SMOKE_TARGET=backend bash scripts/docker_smoke_test.sh
+
+      - name: Container status
+        run: docker compose ps
+
+      - name: Stop backend
+        if: always()
+        run: docker compose down --remove-orphans
+
+      - name: Tag and push to GHCR
+        run: |
+          set -euo pipefail
+          REPO="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          VERSION="${VERSION//\//-}"
+
+          tags=("$VERSION" "${{ github.sha }}")
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tags=(latest "${tags[@]}")
+          fi
+
+          for tag in "${tags[@]}"; do
+            docker tag pcbgpt-backend "${{ env.REGISTRY }}/$REPO/backend:$tag"
+            docker push "${{ env.REGISTRY }}/$REPO/backend:$tag"
+          done

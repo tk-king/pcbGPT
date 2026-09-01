@@ -1,0 +1,8 @@
+/* Global stylesheet entry point.
+ * Split by feature area; import order here preserves the original cascade. */
+@import "./styles/base.css";
+@import "./styles/markdown.css";
+@import "./styles/appShell.css";
+@import "./styles/chat.css";
+@import "./styles/activity.css";
+@import "./styles/parts.css";

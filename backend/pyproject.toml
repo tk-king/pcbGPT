@@ -1,0 +1,56 @@
+[project]
+name = "pcbgpt"
+version = "0.1.0"
+description = "AI-powered PCB design assistant - generate KiCad schematics from natural language"
+readme = "../README.md"
+requires-python = ">=3.11.6"
+dependencies = [
+    # Core framework
+    "fastapi[standard]>=0.119.1",
+    "pydantic>=2.0.0",
+
+    # LLM integration
+    "langchain-openai>=1.0.0",
+
+    # Vector database & embeddings
+    "chromadb>=1.2.1",
+
+    # Component parsing & KiCad
+    "kinparse>=1.2.4",
+    "sexpdata>=1.0.2",
+
+    # PDF processing
+    "pymupdf>=1.26.7",
+
+    # Web search & automation
+    "ddgs>=9.10.0",
+    "selenium>=4.39.0",
+
+    # Database & utilities
+    "whoosh>=2.7.4",
+    "python-dotenv>=0.9.9",
+    "rich>=14.2.0",
+
+    # Desktop launcher (built by the desktop CI workflow)
+    "pywebview>=5.3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.2",
+]
+packaging = [
+    "pyinstaller>=6.11.0",
+]
+[tool.pytest.ini_options]
+pythonpath = [
+    ".",
+    "..",
+]
+# Fail fast instead of hanging (e.g. when a websocket test blocks on a frame).
+timeout = 15
+
+[dependency-groups]
+dev = [
+    "pytest-timeout>=2.4.0",
+]

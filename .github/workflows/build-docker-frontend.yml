@@ -1,0 +1,62 @@
+name: Build Docker Image (frontend)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build frontend image
+        run: docker compose build frontend
+
+      - name: Start frontend
+        # The frontend smoke test does not require the API. Avoid starting its
+        # compose dependency, which would otherwise rebuild the backend image.
+        run: docker compose up -d --no-deps frontend
+
+      - name: Smoke test (frontend)
+        run: SMOKE_TARGET=frontend bash scripts/docker_smoke_test.sh
+
+      - name: Container status
+        run: docker compose ps
+
+      - name: Stop frontend
+        if: always()
+        run: docker compose down --remove-orphans
+
+      - name: Tag and push to GHCR
+        run: |
+          set -euo pipefail
+          REPO="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          VERSION="${VERSION//\//-}"
+
+          tags=("$VERSION" "${{ github.sha }}")
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tags=(latest "${tags[@]}")
+          fi
+
+          for tag in "${tags[@]}"; do
+            docker tag pcbgpt-frontend "${{ env.REGISTRY }}/$REPO/frontend:$tag"
+            docker push "${{ env.REGISTRY }}/$REPO/frontend:$tag"
+          done

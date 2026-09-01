@@ -1,0 +1,11 @@
+/* App shell layout helpers. */
+
+.app-panel {
+    background: var(--surface-1);
+    backdrop-filter: blur(14px);
+}
+
+.app-scroll-area [data-radix-scroll-area-scrollbar],
+.app-scroll-area .mantine-ScrollArea-scrollbar {
+    opacity: 0.75;
+}
